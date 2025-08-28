@@ -16,7 +16,7 @@ let touchStartY = 0;
 
 // Game constants
 const GRID_SIZE = 25; // Increased grid size for better visibility
-const GAME_SPEED = 160; // Slightly faster for better gameplay
+const GAME_SPEED = 170; // Slightly faster for better gameplay
 const EDGE_MARGIN_CELLS = 1; // prevent food near edges
 
 // DOM elements
@@ -39,10 +39,6 @@ const statusBar = document.getElementById('statusBar');
 const sideMenu = document.getElementById('sideMenu');
 const btnPause = document.getElementById('btnPause');
 const btnQuit = document.getElementById('btnQuit');
-const btnUp = document.getElementById('btnUp');
-const btnDown = document.getElementById('btnDown');
-const btnLeft = document.getElementById('btnLeft');
-const btnRight = document.getElementById('btnRight');
 
 // Initialize the game
 function init() {
@@ -69,12 +65,6 @@ function init() {
 	canvas.addEventListener('touchstart', handleTouchStart, { passive: true });
 	canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
 	canvas.addEventListener('touchend', handleTouchEnd, { passive: true });
-	
-	// On-screen buttons
-	if (btnUp) btnUp.addEventListener('click', () => changeDirection('up'));
-	if (btnDown) btnDown.addEventListener('click', () => changeDirection('down'));
-	if (btnLeft) btnLeft.addEventListener('click', () => changeDirection('left'));
-	if (btnRight) btnRight.addEventListener('click', () => changeDirection('right'));
 
 	// Side menu buttons
 	if (btnPause) btnPause.addEventListener('click', togglePauseGame);
@@ -160,7 +150,7 @@ function startGame() {
 	// Start game loop
 	gameRunning = true;
 	const isMobileDevice = (window.innerWidth <= 768) || ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-	const effectiveSpeed = isMobileDevice ? GAME_SPEED * 3 : GAME_SPEED;
+	const effectiveSpeed = isMobileDevice ? GAME_SPEED * 2 : GAME_SPEED;
 	gameLoop = setInterval(updateGame, effectiveSpeed);
 	
 	// Show transient instruction hint
@@ -476,7 +466,7 @@ function restartGame() {
 // Ensure speed adjusts when resuming from pause on mobile
 function resumeWithEffectiveSpeed() {
     const isMobileDevice = (window.innerWidth <= 768) || ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-    const effectiveSpeed = isMobileDevice ? GAME_SPEED * 3 : GAME_SPEED;
+    const effectiveSpeed = isMobileDevice ? GAME_SPEED * 2 : GAME_SPEED;
     clearInterval(gameLoop);
     gameLoop = setInterval(updateGame, effectiveSpeed);
 }

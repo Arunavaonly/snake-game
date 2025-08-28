@@ -237,36 +237,7 @@ body {
 }
 
 /* Controls for Mobile */
-.controls {
-	position: absolute;
-	bottom: 72px;
-	right: 20px;
-	display: none;
-	flex-direction: column;
-	gap: 10px;
-	z-index: 10;
-}
-
-.ctrl-row {
-	display: flex;
-	gap: 10px;
-	justify-content: center;
-}
-
-.ctrl-btn {
-	width: 56px;
-	height: 56px;
-	border-radius: 50%;
-	border: none;
-	background: rgba(255,255,255,0.15);
-	color: #fff;
-	font-size: 20px;
-	backdrop-filter: blur(6px);
-	box-shadow: 0 6px 16px rgba(0,0,0,0.3);
-	cursor: pointer;
-}
-
-.ctrl-btn:active { transform: scale(0.96); }
+/* Mobile on-screen controls removed */
 
 /* Game Over Animation */
 .game-over-content {
@@ -315,8 +286,6 @@ body {
 	#gameCanvas { width: 96vw; }
 	.sidemenu { left: 8px; gap: 8px; }
 	.instructions { bottom: 82px; padding: 0.6rem 0.8rem; }
-	.controls { display: flex; }
-	.ctrl-btn { width: 52px; height: 52px; font-size: 18px; }
 }
 
 /* Animation for new high score */
