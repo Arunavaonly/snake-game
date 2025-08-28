@@ -159,7 +159,9 @@ function startGame() {
 	
 	// Start game loop
 	gameRunning = true;
-	gameLoop = setInterval(updateGame, GAME_SPEED);
+	const isMobileDevice = (window.innerWidth <= 768) || ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+	const effectiveSpeed = isMobileDevice ? GAME_SPEED * 3 : GAME_SPEED;
+	gameLoop = setInterval(updateGame, effectiveSpeed);
 	
 	// Show transient instruction hint
 	showInstructionHint();
@@ -284,6 +286,7 @@ function togglePauseGame() {
     } else {
         gameRunning = true;
         if (btnPause) btnPause.textContent = 'Pause';
+        resumeWithEffectiveSpeed();
     }
 }
 
@@ -468,6 +471,14 @@ function restartGame() {
 	gameContainer.style.display = 'none';
 	playerNameInput.value = '';
 	playerNameInput.focus();
+}
+
+// Ensure speed adjusts when resuming from pause on mobile
+function resumeWithEffectiveSpeed() {
+    const isMobileDevice = (window.innerWidth <= 768) || ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    const effectiveSpeed = isMobileDevice ? GAME_SPEED * 3 : GAME_SPEED;
+    clearInterval(gameLoop);
+    gameLoop = setInterval(updateGame, effectiveSpeed);
 }
 
 // Keyboard controls
