@@ -1,18 +1,20 @@
 # Snake Game
 
-A classic Snake game built with HTML, CSS, and JavaScript featuring player name input, score tracking, persistent high scores, and immersive animations.
+A classic Snake game built with HTML, CSS, and JavaScript featuring player name input, score tracking, persistent high scores, immersive animations, and a left-side menu for quick Pause/Quit.
 
 ## Features
 
 - **Player Name Input**: Players must enter their name before starting the game
-- **Full-Screen Gameplay**: Immersive full-screen experience with jungle-themed background
+- **Board Between Bars**: Game board sits strictly between a top scoreboard and bottom statusbar (never overlaps)
+- **Responsive Board Sizing**: Centered canvas with modern max width; auto-resizes while preserving crisp grid alignment
+- **Left Sidebar Controls**: Always-visible Pause and Quit buttons placed just under the top scoreboard for easy access
 - **Live Snake Animations**: Realistic snake movement with slither effects, glowing head, and animated body
 - **Real-time Scoreboard**: Shows current score and high score during gameplay
 - **Score Tracking**: 
   - Uses sessionStorage to track score during the current game session
   - Uses localStorage to persist the highest score across browser sessions
 - **Game Over Effects**: Dramatic game over animation with sound effects
-- **Responsive Design**: Works on both desktop and mobile devices
+- **Responsive Design**: Works on both desktop and mobile devices; on small screens, board and controls adapt
 - **Modern UI**: Beautiful gradient design with smooth animations and visual effects
 
 ## How to Play
@@ -28,6 +30,8 @@ A classic Snake game built with HTML, CSS, and JavaScript featuring player name 
    - **Down Arrow**: Move down
    - **Left Arrow**: Move left
    - **Right Arrow**: Move right
+   - **Pause**: Click the Pause button in the left sidebar (toggles Resume)
+   - **Quit**: Click the Quit button to stop the game and return to the start screen
 
 3. **Game Rules**:
    - Guide the snake to eat the glowing red food
@@ -51,7 +55,7 @@ A classic Snake game built with HTML, CSS, and JavaScript featuring player name 
 - **Texture Details**: Subtle texture effects on body segments
 
 ### Game Environment
-- **Full-Screen Canvas**: Game takes up the entire browser window
+- **Board-Sized Canvas**: Canvas is strictly constrained between the scoreboard and statusbar
 - **Jungle Background**: Dark blue gradient with subtle grid pattern
 - **Animated Food**: Glowing red food with pulsing animation
 - **Grid Pattern**: Subtle grid lines for jungle atmosphere
@@ -66,9 +70,9 @@ A classic Snake game built with HTML, CSS, and JavaScript featuring player name 
 
 ```
 snake-game/
-├── index.html      # Main HTML file with audio elements
-├── style.css       # CSS styling with animations
-├── script.js       # JavaScript game logic with full-screen support
+├── index.html      # Main HTML structure (scoreboard, canvas, left sidebar, statusbar)
+├── style.css       # CSS styling, layout (between bars), sidebar and animations
+├── script.js       # JavaScript game logic, board sizing, controls (Pause/Quit)
 └── README.md       # This file
 ```
 
@@ -79,7 +83,8 @@ snake-game/
 - **localStorage**: Used to persist the highest score across browser sessions
 
 ### Game Mechanics
-- **Full-Screen Canvas**: Dynamically resizes to window dimensions
+- **Board-Sized Canvas**: Dynamically resizes to fit between top and bottom bars
+- **Crisp Grid Sizing**: Canvas width/height snap to multiples of the grid size for sharp lines
 - **Grid-based movement**: 25x25 pixel grid for smooth gameplay
 - **Collision detection**: Wall and self-collision detection
 - **Random food generation**: Ensures food doesn't spawn on snake
@@ -100,7 +105,6 @@ snake-game/
 - Works on all modern browsers
 - Responsive design for mobile devices
 - No external dependencies required
-- Full-screen API support
 
 ## Getting Started
 

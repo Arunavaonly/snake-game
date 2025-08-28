@@ -36,6 +36,9 @@ const sadSound = document.getElementById('sadSound');
 const instructionHint = document.getElementById('instructionHint');
 const topBar = document.getElementById('topBar');
 const statusBar = document.getElementById('statusBar');
+const sideMenu = document.getElementById('sideMenu');
+const btnPause = document.getElementById('btnPause');
+const btnQuit = document.getElementById('btnQuit');
 const btnUp = document.getElementById('btnUp');
 const btnDown = document.getElementById('btnDown');
 const btnLeft = document.getElementById('btnLeft');
@@ -72,6 +75,10 @@ function init() {
 	if (btnDown) btnDown.addEventListener('click', () => changeDirection('down'));
 	if (btnLeft) btnLeft.addEventListener('click', () => changeDirection('left'));
 	if (btnRight) btnRight.addEventListener('click', () => changeDirection('right'));
+
+	// Side menu buttons
+	if (btnPause) btnPause.addEventListener('click', togglePauseGame);
+	if (btnQuit) btnQuit.addEventListener('click', quitGame);
 	
 	// Focus on input when page loads
 	playerNameInput.focus();
@@ -86,7 +93,8 @@ function resizeCanvas() {
 	// Desired render width: centered and constrained like CSS width
 	const isMobile = window.innerWidth <= 768;
 	const cssMaxWidth = 1100; // keep in sync with CSS
-	const targetCssWidth = Math.min(window.innerWidth, isMobile ? Math.floor(window.innerWidth * 0.96) : cssMaxWidth);
+	const sideMenuGutter = 12 + 180; // left offset + approx menu width
+	const targetCssWidth = Math.min(window.innerWidth - sideMenuGutter, isMobile ? Math.floor(window.innerWidth * 0.96) : cssMaxWidth);
 
 	// Snap canvas internal size to GRID_SIZE multiples for crisp grid
 	const cols = Math.max(10, Math.floor(targetCssWidth / GRID_SIZE));
@@ -99,6 +107,13 @@ function resizeCanvas() {
 	canvas.style.top = `${top}px`;
 	canvas.style.width = `${pixelWidth}px`;
 	canvas.style.height = `${pixelHeight}px`;
+
+	// Position side menu to fit between bars
+	if (sideMenu) {
+		// Slight offset so buttons sit just below the scoreboard shadow
+		sideMenu.style.top = `${top + 8}px`;
+		sideMenu.style.bottom = `${bottom}px`;
+	}
 }
 
 // Load high score from localStorage
@@ -135,6 +150,9 @@ function startGame() {
 	// Hide name modal and show game
 	nameModal.style.display = 'none';
 	gameContainer.style.display = 'block';
+
+	// Recalculate sizes now that bars are visible
+	resizeCanvas();
 	
 	// Initialize game state
 	initGame();
@@ -255,6 +273,32 @@ function updateGame() {
 	// Update animation frame
 	animationFrame++;
 	snakeAnimationOffset = Math.sin(animationFrame * 0.2) * 2;
+}
+
+// Pause/Resume game
+function togglePauseGame() {
+    if (!gameContainer || !canvas) return;
+    if (gameRunning) {
+        gameRunning = false;
+        if (btnPause) btnPause.textContent = 'Resume';
+    } else {
+        gameRunning = true;
+        if (btnPause) btnPause.textContent = 'Pause';
+    }
+}
+
+// Quit game: stop loop and return to name modal
+function quitGame() {
+    gameRunning = false;
+    if (gameLoop) clearInterval(gameLoop);
+    // Reset UI state
+    gameOverModal.style.display = 'none';
+    gameContainer.style.display = 'none';
+    nameModal.style.display = 'flex';
+    // Reset input/button states
+    if (btnPause) btnPause.textContent = 'Pause';
+    playerNameInput.value = '';
+    playerNameInput.focus();
 }
 
 // Move snake based on direction
