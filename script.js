@@ -17,6 +17,7 @@ let touchStartY = 0;
 // Game constants
 const GRID_SIZE = 25; // Increased grid size for better visibility
 const GAME_SPEED = 160; // Slightly faster for better gameplay
+const EDGE_MARGIN_CELLS = 1; // prevent food near edges
 
 // DOM elements
 const nameModal = document.getElementById('nameModal');
@@ -33,13 +34,19 @@ const playAgainBtn = document.getElementById('playAgain');
 const gameOverSound = document.getElementById('gameOverSound');
 const sadSound = document.getElementById('sadSound');
 const instructionHint = document.getElementById('instructionHint');
+const topBar = document.getElementById('topBar');
+const statusBar = document.getElementById('statusBar');
+const btnUp = document.getElementById('btnUp');
+const btnDown = document.getElementById('btnDown');
+const btnLeft = document.getElementById('btnLeft');
+const btnRight = document.getElementById('btnRight');
 
 // Initialize the game
 function init() {
 	canvas = document.getElementById('gameCanvas');
 	ctx = canvas.getContext('2d');
 	
-	// Set canvas to full screen
+	// Set canvas size between bars
 	resizeCanvas();
 	window.addEventListener('resize', resizeCanvas);
 	
@@ -55,19 +62,43 @@ function init() {
 		}
 	});
 	
-	// Mobile swipe controls
+	// Mobile swipe controls (higher sensitivity)
 	canvas.addEventListener('touchstart', handleTouchStart, { passive: true });
 	canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
 	canvas.addEventListener('touchend', handleTouchEnd, { passive: true });
+	
+	// On-screen buttons
+	if (btnUp) btnUp.addEventListener('click', () => changeDirection('up'));
+	if (btnDown) btnDown.addEventListener('click', () => changeDirection('down'));
+	if (btnLeft) btnLeft.addEventListener('click', () => changeDirection('left'));
+	if (btnRight) btnRight.addEventListener('click', () => changeDirection('right'));
 	
 	// Focus on input when page loads
 	playerNameInput.focus();
 }
 
-// Resize canvas to full screen
+// Resize canvas to fit between bars
 function resizeCanvas() {
-	canvas.width = window.innerWidth;
-	canvas.height = window.innerHeight;
+	const top = topBar ? topBar.getBoundingClientRect().height : 0;
+	const bottom = statusBar ? statusBar.getBoundingClientRect().height : 0;
+	const availableHeight = Math.max(100, window.innerHeight - top - bottom);
+
+	// Desired render width: centered and constrained like CSS width
+	const isMobile = window.innerWidth <= 768;
+	const cssMaxWidth = 1100; // keep in sync with CSS
+	const targetCssWidth = Math.min(window.innerWidth, isMobile ? Math.floor(window.innerWidth * 0.96) : cssMaxWidth);
+
+	// Snap canvas internal size to GRID_SIZE multiples for crisp grid
+	const cols = Math.max(10, Math.floor(targetCssWidth / GRID_SIZE));
+	const rows = Math.max(6, Math.floor(availableHeight / GRID_SIZE));
+	const pixelWidth = cols * GRID_SIZE;
+	const pixelHeight = rows * GRID_SIZE;
+
+	canvas.width = pixelWidth;
+	canvas.height = pixelHeight;
+	canvas.style.top = `${top}px`;
+	canvas.style.width = `${pixelWidth}px`;
+	canvas.style.height = `${pixelHeight}px`;
 }
 
 // Load high score from localStorage
@@ -124,15 +155,11 @@ function showInstructionHint() {
 	instructionHint.style.display = 'block';
 	instructionHint.classList.remove('fade-out');
 	instructionHint.classList.add('fade-in');
-	
-	// Hide after 2.5s
 	if (hintTimeoutId) clearTimeout(hintTimeoutId);
 	hintTimeoutId = setTimeout(() => {
 		instructionHint.classList.remove('fade-in');
 		instructionHint.classList.add('fade-out');
-		setTimeout(() => {
-			instructionHint.style.display = 'none';
-		}, 350);
+		setTimeout(() => { instructionHint.style.display = 'none'; }, 350);
 	}, 2500);
 }
 
@@ -146,8 +173,10 @@ function initGame() {
 	sessionStorage.removeItem('snakeGameScore');
 	
 	// Initialize snake in center of screen
-	const centerX = Math.floor(canvas.width / (2 * GRID_SIZE));
-	const centerY = Math.floor(canvas.height / (2 * GRID_SIZE));
+	const cols = Math.floor(canvas.width / GRID_SIZE);
+	const rows = Math.floor(canvas.height / GRID_SIZE);
+	const centerX = Math.floor(cols / 2);
+	const centerY = Math.floor(rows / 2);
 	
 	snake = [
 		{x: centerX, y: centerY},
@@ -165,23 +194,28 @@ function initGame() {
 	drawGame();
 }
 
-// Generate random food position
+// Generate random food position (avoid edges)
 function generateFood() {
 	const maxX = Math.floor(canvas.width / GRID_SIZE);
 	const maxY = Math.floor(canvas.height / GRID_SIZE);
+	const minCellX = EDGE_MARGIN_CELLS;
+	const minCellY = EDGE_MARGIN_CELLS;
+	const maxCellX = Math.max(minCellX + 1, maxX - 1 - EDGE_MARGIN_CELLS);
+	const maxCellY = Math.max(minCellY + 1, maxY - 1 - EDGE_MARGIN_CELLS);
 	
-	food = {
-		x: Math.floor(Math.random() * maxX),
-		y: Math.floor(Math.random() * maxY)
-	};
-	
-	// Make sure food doesn't spawn on snake
-	while (snake.some(segment => segment.x === food.x && segment.y === food.y)) {
-		food = {
-			x: Math.floor(Math.random() * maxX),
-			y: Math.floor(Math.random() * maxY)
-		};
+	function randomCell(min, max) {
+		// inclusive of min, inclusive of max
+		return Math.floor(Math.random() * (max - min + 1)) + min;
 	}
+	
+	let pos = { x: randomCell(minCellX, maxCellX), y: randomCell(minCellY, maxCellY) };
+	// Ensure food doesn't spawn on snake or outside safe bounds
+	while (
+		snake.some(segment => segment.x === pos.x && segment.y === pos.y)
+	) {
+		pos = { x: randomCell(minCellX, maxCellX), y: randomCell(minCellY, maxCellY) };
+	}
+	food = pos;
 }
 
 // Update game state
@@ -228,21 +262,21 @@ function moveSnake() {
 	const head = {x: snake[0].x, y: snake[0].y};
 	
 	switch (direction) {
-		case 'up':
-			head.y--;
-			break;
-		case 'down':
-			head.y++;
-			break;
-		case 'left':
-			head.x--;
-			break;
-		case 'right':
-			head.x++;
-			break;
+		case 'up': head.y--; break;
+		case 'down': head.y++; break;
+		case 'left': head.x--; break;
+		case 'right': head.x++; break;
 	}
 	
 	snake.unshift(head);
+}
+
+function changeDirection(newDir) {
+	if (!gameRunning) return;
+	if (newDir === 'up' && direction !== 'down') direction = 'up';
+	else if (newDir === 'down' && direction !== 'up') direction = 'down';
+	else if (newDir === 'left' && direction !== 'right') direction = 'left';
+	else if (newDir === 'right' && direction !== 'left') direction = 'right';
 }
 
 // Check for collisions
@@ -256,7 +290,7 @@ function checkCollision() {
 		return true;
 	}
 	
-	// Self collision (check if head collides with any body segment)
+	// Self collision
 	for (let i = 1; i < snake.length; i++) {
 		if (head.x === snake[i].x && head.y === snake[i].y) {
 			return true;
@@ -309,10 +343,8 @@ function drawSnake() {
 		const y = segment.y * GRID_SIZE;
 		
 		if (index === 0) {
-			// Draw head with special effects
 			drawSnakeHead(x, y);
 		} else {
-			// Draw body with slither animation
 			drawSnakeBody(x, y, index);
 		}
 	});
@@ -320,45 +352,29 @@ function drawSnake() {
 
 // Draw snake head
 function drawSnakeHead(x, y) {
-	// Head glow effect
 	ctx.shadowColor = '#4CAF50';
 	ctx.shadowBlur = 10;
-	
-	// Main head
 	ctx.fillStyle = '#2E7D32';
 	ctx.fillRect(x + 2, y + 2, GRID_SIZE - 4, GRID_SIZE - 4);
-	
-	// Eyes
 	ctx.fillStyle = '#fff';
 	ctx.fillRect(x + 6, y + 6, 3, 3);
 	ctx.fillRect(x + 15, y + 6, 3, 3);
-	
-	// Pupils
 	ctx.fillStyle = '#000';
 	ctx.fillRect(x + 7, y + 7, 1, 1);
 	ctx.fillRect(x + 16, y + 7, 1, 1);
-	
-	// Tongue
 	ctx.fillStyle = '#ff0000';
 	ctx.fillRect(x + 11, y + 20, 3, 5);
-	
 	ctx.shadowBlur = 0;
 }
 
 // Draw snake body
 function drawSnakeBody(x, y, index) {
-	// Slither animation offset
 	const offset = Math.sin(animationFrame * 0.2 + index * 0.5) * 2;
-	
-	// Body segment with gradient
 	const gradient = ctx.createLinearGradient(x, y, x + GRID_SIZE, y + GRID_SIZE);
 	gradient.addColorStop(0, '#4CAF50');
 	gradient.addColorStop(1, '#388E3C');
-	
 	ctx.fillStyle = gradient;
 	ctx.fillRect(x + 1, y + 1 + offset, GRID_SIZE - 2, GRID_SIZE - 2);
-	
-	// Add some texture
 	ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
 	ctx.fillRect(x + 3, y + 3 + offset, GRID_SIZE - 6, 2);
 }
@@ -367,24 +383,17 @@ function drawSnakeBody(x, y, index) {
 function drawFood() {
 	const x = food.x * GRID_SIZE;
 	const y = food.y * GRID_SIZE;
-	
-	// Glow effect
 	const glowIntensity = Math.sin(animationFrame * 0.3) * 0.3 + 0.7;
 	ctx.shadowColor = '#FF5722';
 	ctx.shadowBlur = 15 * glowIntensity;
-	
-	// Main food
 	ctx.fillStyle = '#FF5722';
 	ctx.beginPath();
 	ctx.arc(x + GRID_SIZE/2, y + GRID_SIZE/2, GRID_SIZE/2 - 2, 0, Math.PI * 2);
 	ctx.fill();
-	
-	// Inner glow
 	ctx.fillStyle = '#FF9800';
 	ctx.beginPath();
 	ctx.arc(x + GRID_SIZE/2, y + GRID_SIZE/2, GRID_SIZE/3, 0, Math.PI * 2);
 	ctx.fill();
-	
 	ctx.shadowBlur = 0;
 }
 
@@ -392,24 +401,12 @@ function drawFood() {
 function gameOver() {
 	gameRunning = false;
 	clearInterval(gameLoop);
-	
-	// Play sad game over sound (prefer sadSound; fallback to gameOverSound)
 	playSadSound();
-	
-	// Save score to localStorage
 	const isNewHighScore = saveHighScore();
-	
-	// Show game over modal with delay for dramatic effect
 	setTimeout(() => {
 		finalScoreElement.textContent = score;
-		
-		if (isNewHighScore) {
-			newHighScoreElement.style.display = 'block';
-			newHighScoreElement.classList.add('celebrate');
-		} else {
-			newHighScoreElement.style.display = 'none';
-		}
-		
+		if (isNewHighScore) { newHighScoreElement.style.display = 'block'; newHighScoreElement.classList.add('celebrate'); }
+		else { newHighScoreElement.style.display = 'none'; }
 		gameOverModal.style.display = 'flex';
 	}, 500);
 }
@@ -417,22 +414,14 @@ function gameOver() {
 function playSadSound() {
 	const audio = sadSound || gameOverSound;
 	if (!audio) return;
-	try {
-		audio.currentTime = 0;
-		audio.play().catch(() => {});
-	} catch (_) {}
+	try { audio.currentTime = 0; audio.play().catch(() => {}); } catch (_) {}
 }
 
 // Restart game
 function restartGame() {
-	// Hide game over modal
 	gameOverModal.style.display = 'none';
-	
-	// Show name modal again
 	nameModal.style.display = 'flex';
 	gameContainer.style.display = 'none';
-	
-	// Clear input
 	playerNameInput.value = '';
 	playerNameInput.focus();
 }
@@ -440,28 +429,11 @@ function restartGame() {
 // Keyboard controls
 document.addEventListener('keydown', function(e) {
 	if (!gameRunning) return;
-	
 	switch (e.key) {
-		case 'ArrowUp':
-			if (direction !== 'down') {
-				direction = 'up';
-			}
-			break;
-		case 'ArrowDown':
-			if (direction !== 'up') {
-				direction = 'down';
-			}
-			break;
-		case 'ArrowLeft':
-			if (direction !== 'right') {
-				direction = 'left';
-			}
-			break;
-		case 'ArrowRight':
-			if (direction !== 'left') {
-				direction = 'right';
-			}
-			break;
+		case 'ArrowUp': changeDirection('up'); break;
+		case 'ArrowDown': changeDirection('down'); break;
+		case 'ArrowLeft': changeDirection('left'); break;
+		case 'ArrowRight': changeDirection('right'); break;
 	}
 });
 
@@ -476,31 +448,22 @@ function handleTouchStart(e) {
 function handleTouchMove(e) {
 	if (!gameRunning) return;
 	if (!e.touches || e.touches.length === 0) return;
-	
 	const dx = e.touches[0].clientX - touchStartX;
 	const dy = e.touches[0].clientY - touchStartY;
-	
-	// Prevent page scroll when swiping to control snake
-	if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
-		e.preventDefault();
-	}
+	// lower threshold to increase sensitivity
+	if (Math.abs(dx) > 6 || Math.abs(dy) > 6) { e.preventDefault(); }
 }
 
 function handleTouchEnd(e) {
 	if (!gameRunning) return;
 	const dx = (e.changedTouches && e.changedTouches[0].clientX - touchStartX) || 0;
 	const dy = (e.changedTouches && e.changedTouches[0].clientY - touchStartY) || 0;
-	
-	if (Math.abs(dx) < 20 && Math.abs(dy) < 20) return; // ignore taps
-	
+	// lower swipe detection threshold
+	if (Math.abs(dx) < 12 && Math.abs(dy) < 12) return; // ignore tiny taps
 	if (Math.abs(dx) > Math.abs(dy)) {
-		// horizontal swipe
-		if (dx > 0 && direction !== 'left') direction = 'right';
-		else if (dx < 0 && direction !== 'right') direction = 'left';
+		if (dx > 0) changeDirection('right'); else changeDirection('left');
 	} else {
-		// vertical swipe
-		if (dy > 0 && direction !== 'up') direction = 'down';
-		else if (dy < 0 && direction !== 'down') direction = 'up';
+		if (dy > 0) changeDirection('down'); else changeDirection('up');
 	}
 }
 
