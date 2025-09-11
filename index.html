@@ -32,6 +32,15 @@
             <!-- Game Canvas -->
             <canvas id="gameCanvas"></canvas>
 
+            <!-- Growth Progress Indicator -->
+            <div id="growthIndicator" class="growth-indicator" style="display: none;">
+                <div class="growth-text">Growth Progress</div>
+                <div class="growth-bar">
+                    <div id="growthProgress" class="growth-progress"></div>
+                </div>
+                <div class="growth-text-small">Next growth in <span id="foodsUntilGrowth">2</span> food(s)</div>
+            </div>
+
             <!-- Side Menu -->
             <div id="sideMenu" class="sidemenu" aria-label="Game menu">
                 <button id="btnPause" class="menu-btn" aria-label="Pause">Pause</button>
