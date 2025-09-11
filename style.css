@@ -249,6 +249,7 @@ body {
 	border-radius: 12px;
 	padding: 12px 16px;
 	min-width: 200px;
+	max-width: 250px;
 	z-index: 15;
 	border: 1px solid rgba(255, 255, 255, 0.2);
 	box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
@@ -409,15 +410,33 @@ body {
 @media (max-width: 768px) {
 	#gameCanvas { width: 96vw; }
 	.sidemenu { left: 8px; gap: 8px; }
-	.instructions { bottom: 82px; padding: 0.6rem 0.8rem; }
+	.instructions { bottom: 140px; padding: 0.6rem 0.8rem; }
 	
-	/* Mobile adjustments for growth indicator */
+	/* Mobile adjustments for growth indicator - move to bottom */
 	.growth-indicator {
-		top: 60px;
-		right: 10px;
-		left: 10px;
-		min-width: unset;
-		padding: 10px 12px;
+		top: unset;
+		bottom: 80px;
+		right: 50%;
+		left: unset;
+		transform: translateX(50%);
+		min-width: 280px;
+		max-width: 320px;
+		padding: 8px 12px;
+	}
+	
+	.growth-text, .growth-text-small {
+		font-size: 0.75rem;
+	}
+}
+
+/* Desktop view on mobile devices (wider screens but touch-enabled) */
+@media (min-width: 769px) and (max-height: 600px) and (pointer: coarse) {
+	.growth-indicator {
+		top: 75px;
+		right: 15px;
+		min-width: 180px;
+		max-width: 220px;
+		padding: 10px 14px;
 	}
 	
 	.growth-text, .growth-text-small {
